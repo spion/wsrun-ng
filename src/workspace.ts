@@ -1,11 +1,6 @@
-/**
- * Remove me.
- */
-
 import * as fs from 'fs'
 import * as path from 'path'
 import * as glob from 'glob'
-import { flatMap } from 'lodash'
 
 export type Dict<T> = { [key: string]: T }
 
@@ -34,7 +29,7 @@ export function listPkgs(wsRoot: string, globs: string[]) {
     folder => `/${folder}/**/+(${registryFilenames.join('|')})`
   )
 
-  const pkgJsonPaths = flatMap(globs, (g: string) =>
+  const pkgJsonPaths = globs.flatMap((g: string) =>
     glob.sync(g.replace(/\/?$/, trailingPattern), {
       cwd: wsRoot,
       ignore: ignorePatterns.map(ignorePattern => g.replace(/\/?$/, ignorePattern))

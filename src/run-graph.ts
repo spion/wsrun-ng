@@ -1,23 +1,29 @@
-import * as Bromise from 'bluebird'
 import chalk from 'chalk'
 
 import { PkgJson, Dict } from './workspace'
 import { ResultSpecialValues, Result, ProcResolution } from './enums'
-import { uniq, intersection } from 'lodash'
 import { CmdProcess } from './cmd-process'
-import minimatch = require('minimatch')
+import { minimatch } from 'minimatch'
 import { fixPaths } from './fix-paths'
 import { ConsoleFactory, SerializedConsole, DefaultConsole } from './console'
 import { getChangedFilesForRoots } from 'jest-changed-files'
 import { filterChangedPackages } from './filter-changed-packages'
 import { expandRevDeps } from './rev-deps'
 
-type PromiseFn<T> = () => Bromise<T>
-type PromiseFnRunner = <T>(f: PromiseFn<T>) => Bromise<T>
+import throat from 'throat'
 
-let mkThroat = require('throat')(Bromise) as (limit: number) => PromiseFnRunner
+type PromiseFn<T> = () => Promise<T>
+type PromiseFnRunner = <T>(f: PromiseFn<T>) => Promise<T>
 
 let passThrough: PromiseFnRunner = f => f()
+
+function intersection(s1: string[], s2: string[]) {
+  return s1.filter(x => s2.includes(x))
+}
+
+function uniq(s: string[]) {
+  return Array.from(new Set(s))
+}
 
 class Prefixer {
   constructor() {}
@@ -51,9 +57,9 @@ export interface GraphOptions {
 }
 
 export class RunGraph {
-  private procmap = new Map<string, Bromise<ProcResolution>>()
+  private procmap = new Map<string, Promise<ProcResolution>>()
   children: CmdProcess[]
-  finishedAll!: Bromise<CmdProcess[]>
+  finishedAll!: Promise<CmdProcess[]>
   private jsonMap = new Map<string, PkgJson>()
   private runList = new Set<string>()
   private resultMap = new Map<string, Result>()
@@ -71,10 +77,10 @@ export class RunGraph {
     pkgJsons.forEach(j => this.jsonMap.set(j.name, j))
     this.children = []
     // serial always has a concurrency of 1
-    if (this.opts.mode === 'serial') this.throat = mkThroat(1)
+    if (this.opts.mode === 'serial') this.throat = throat(1)
     // max 16 proc unless otherwise specified
-    else if (this.opts.mode === 'stages') this.throat = mkThroat(opts.concurrency || 16)
-    else if (opts.concurrency) this.throat = mkThroat(opts.concurrency)
+    else if (this.opts.mode === 'stages') this.throat = throat(opts.concurrency || 16)
+    else if (opts.concurrency) this.throat = throat(opts.concurrency)
 
     if (opts.collectLogs) this.consoles = new SerializedConsole(console)
     else this.consoles = new DefaultConsole()
@@ -100,10 +106,10 @@ export class RunGraph {
     this.children.forEach(ch => ch.stop())
   }
 
-  private lookupOrRun(cmd: string[], pkg: string): Bromise<ProcResolution> {
+  private lookupOrRun(cmd: string[], pkg: string): Promise<ProcResolution> {
     let proc = this.procmap.get(pkg)
     if (proc == null) {
-      proc = Bromise.resolve().then(() => this.runOne(cmd, pkg))
+      proc = Promise.resolve().then(() => this.runOne(cmd, pkg))
       this.procmap.set(pkg, proc)
       return proc
     }
@@ -166,10 +172,10 @@ export class RunGraph {
     return rres
   }
 
-  private runOne(cmdArray: string[], pkg: string): Bromise<ProcResolution> {
+  private runOne(cmdArray: string[], pkg: string): Promise<ProcResolution> {
     let p = this.jsonMap.get(pkg)
     if (p == null) throw new Error('Unknown package: ' + pkg)
-    let myDeps = Bromise.all(this.allDeps(p).map(d => this.lookupOrRun(cmdArray, d)))
+    let myDeps = Promise.all(this.allDeps(p).map(d => this.lookupOrRun(cmdArray, d)))
 
     return myDeps.then(depsStatuses => {
       this.resultMap.set(pkg, ResultSpecialValues.Pending)
@@ -177,15 +183,15 @@ export class RunGraph {
       if (this.opts.exclude.indexOf(pkg) >= 0) {
         console.log(chalk.bold(pkg), 'in exclude list, skipping')
         this.resultMap.set(pkg, ResultSpecialValues.Excluded)
-        return Bromise.resolve(ProcResolution.Excluded)
+        return Promise.resolve(ProcResolution.Excluded)
       }
       if (this.opts.excludeMissing && (!p || !p.scripts || !p.scripts[cmdArray[0]])) {
         console.log(chalk.bold(pkg), 'has no', cmdArray[0], 'script, skipping missing')
         this.resultMap.set(pkg, ResultSpecialValues.MissingScript)
-        return Bromise.resolve(ProcResolution.Missing)
+        return Promise.resolve(ProcResolution.Missing)
       }
 
-      let ifCondtition = Bromise.resolve(true)
+      let ifCondtition = Promise.resolve(true)
 
       if (
         this.opts.if &&
@@ -197,7 +203,7 @@ export class RunGraph {
       let child = ifCondtition.then(shouldExecute => {
         if (!shouldExecute) {
           this.resultMap.set(pkg, ResultSpecialValues.Excluded)
-          return Bromise.resolve({
+          return Promise.resolve({
             status: ProcResolution.Excluded,
             process: null as null | CmdProcess
           })
@@ -225,10 +231,10 @@ export class RunGraph {
             ch.process.start()
             return ch.process.finished
           }
-          return Bromise.resolve()
+          return Promise.resolve()
         })
         if (this.opts.mode === 'parallel' || !ch.process) return ch.status
-        else return processRun.thenReturn(ProcResolution.Normal)
+        else return processRun.then(() => ProcResolution.Normal)
       })
     })
   }
@@ -329,7 +335,7 @@ export class RunGraph {
       pkgs = pkgs.filter(name => globs.some(glob => minimatch(name, glob)))
     }
 
-    return Bromise.resolve(pkgs)
+    return Promise.resolve(pkgs)
   }
 
   filterByChangedFiles(pkgs: string[]) {
@@ -374,13 +380,13 @@ export class RunGraph {
 
     this.runList = new Set(pkgs)
     return (
-      Bromise.all(pkgs.map(pkg => this.lookupOrRun(cmd, pkg)))
+      Promise.all(pkgs.map(pkg => this.lookupOrRun(cmd, pkg)))
         // Wait for any of them to error
-        .then(() => Bromise.all(this.children.map(c => c.exitError)))
+        .then(() => Promise.all(this.children.map(c => c.exitError)))
         // If any of them do, and fastExit is enabled, stop every other
         .catch(_err => this.opts.fastExit && this.closeAll())
         // Wait for the all the processes to finish
-        .then(() => Bromise.all(this.children.map(c => c.result)))
+        .then(() => Promise.all(this.children.map(c => c.result)))
         // Generate report
         .then(() => this.checkResultsAndReport(cmd, pkgs))
     )

@@ -10,16 +10,11 @@
 // * command (wsrun etc etc)
 // * env var
 
-import * as fs from 'mz/fs'
-import * as rimraf from 'rimraf'
+import * as fs from 'fs/promises'
+import { rimraf } from 'rimraf'
 import * as cp from 'child_process'
-import * as mkdirp from 'mkdirp'
+import { mkdirp } from 'mkdirp'
 import * as path from 'path'
-
-import { promisify } from 'util'
-
-let rimrafAsync = promisify(rimraf)
-let mkdirpAsync = promisify(mkdirp)
 
 export type PackageJson = {
   name?: string
@@ -29,7 +24,7 @@ export type PackageJson = {
   scripts?: { [name: string]: string }
 }
 
-let counter = process.env['JEST_WORKER_ID'] || '0'
+let counter = process.env['JEST_WORKER_ID'] || '1'
 
 let testDir = `${process.cwd()}/tmp/wsrun-test-${counter}`
 
@@ -47,13 +42,13 @@ async function realExists(path: string) {
 }
 
 export async function withScaffold(opts: ScaffoldOptions, f: () => PromiseLike<void>) {
-  if (await realExists(testDir)) await rimrafAsync(testDir)
-  await mkdirpAsync(testDir)
+  if (await realExists(testDir)) await rimraf(testDir)
+  await mkdirp(testDir)
   await fs.writeFile(
     `${testDir}/package.json`,
     JSON.stringify(
       {
-        name: test,
+        name: 'test',
         license: 'MIT',
         workspaces: opts.workspaces || {
           packages: ['packages/*']
@@ -66,13 +61,13 @@ export async function withScaffold(opts: ScaffoldOptions, f: () => PromiseLike<v
   for (let pkg of opts.packages) {
     let pkgPath = pkg.path || `packages/${pkg.name}`
     let fullDir = `${testDir}/${pkgPath}`
-    await mkdirpAsync(fullDir)
+    await mkdirp(fullDir)
     await fs.writeFile(`${fullDir}/package.json`, JSON.stringify(pkg, null, 2))
   }
   try {
     return await f()
   } finally {
-    if (await realExists(testDir)) await rimrafAsync(testDir)
+    if (await realExists(testDir)) await rimraf(testDir)
   }
 }
 
@@ -108,6 +103,6 @@ export async function wsrun(cmd: string | string[], env: { [key: string]: string
   if (typeof cmd === 'string') cmd = cmd.split(' ')
   return cp.spawnSync(wsrunPath, ['--bin=' + require.resolve('./runner.sh')].concat(cmd), {
     cwd: testDir,
-    env: { ...process.env, ...env }
+    env: { PATH: process.env['PATH'], ...env }
   })
 }

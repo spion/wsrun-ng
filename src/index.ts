@@ -3,16 +3,16 @@
  */
 
 import * as fs from 'fs'
-import * as yargs from 'yargs'
-import * as _ from 'lodash'
+import yargs from 'yargs'
+
 import chalk from 'chalk'
 
 import { RunGraph } from './run-graph'
-import { listPkgs } from './workspace'
+import { Packages, listPkgs } from './workspace'
 
-let yargsParser = yargs
+let yargsParser = yargs(process.argv)
   .env('WSRUN')
-  .wrap(yargs.terminalWidth() - 1)
+  // .wrap(yargs.terminalWidth() - 1)
   .updateStrings({
     'Options:': 'Other Options:'
   })
@@ -198,20 +198,20 @@ const packageJsonWorkspacesNohoistFormat = packageJsonWorkspaces && packageJsonW
 
 const workspaceGlobs = packageJsonWorkspacesNohoistFormat || packageJsonWorkspaces || ['packages/*']
 
-let pkgs
+let pkgs: Packages
 try {
   pkgs = listPkgs('./', workspaceGlobs)
 } catch (err) {
-  console.error(chalk.red(`\nERROR: ${err.message}`))
+  const e = err as Error
+  console.error(chalk.red(`\nERROR: ${e.message}`))
   process.exit(1)
 }
 
-const pkgPaths = _.mapValues(
-  _.keyBy(pkgs, p => p.json.name),
-  v => v.path
+const pkgPaths = Object.fromEntries(
+  Object.entries(pkgs).map(([_, pkg]) => [pkg.json.name, pkg.path])
 )
 
-const pkgJsons = _.map(pkgs, pkg => pkg.json)
+const pkgJsons = Object.entries(pkgs).map(([_, pkg]) => pkg.json)
 
 let runner = new RunGraph(
   pkgJsons,

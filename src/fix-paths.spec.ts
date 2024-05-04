@@ -1,4 +1,3 @@
-import 'jest'
 import { fixPaths } from './fix-paths'
 import chalk from 'chalk'
 

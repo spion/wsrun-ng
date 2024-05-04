@@ -1,4 +1,3 @@
-import 'jest'
 import { withScaffold, echo, wsrun } from './test.util'
 
 let pkgList = (errorp3: boolean = false, condition?: string) => [
@@ -36,12 +35,14 @@ describe('basic', () => {
         let tst = await wsrun(`--parallel doecho ${wait}`)
         expect(tst.error).toBeFalsy()
         let output = await echo.getOutput()
-        expect(
-          output
-            .split('\n')
-            .sort()
-            .reverse()
-        ).toEqual([`p5 ${wait}`, `p4 ${wait}`, `p3 ${wait}`, `p2 ${wait}`, `p1 ${wait}`, ''])
+        expect(output.split('\n').sort().reverse()).toEqual([
+          `p5 ${wait}`,
+          `p4 ${wait}`,
+          `p3 ${wait}`,
+          `p2 ${wait}`,
+          `p1 ${wait}`,
+          ''
+        ])
       }
     )
   })
@@ -206,7 +207,7 @@ describe('basic', () => {
           echo.makePkg(
             { name: 'app-x-frontend', dependencies: {} },
             '',
-            'Output for path src/index.ts testing'
+            'Example output for path src/index.ts for testing purposes'
           )
         ]
       },

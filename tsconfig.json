@@ -1,12 +1,13 @@
 {
   "include": ["src"],
   "compilerOptions": {
-    "target": "es2015",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "target": "ES2020",
+    "skipLibCheck": true,
+    "module": "ES2020",
+    "moduleResolution": "Bundler",
     "outDir": "./build",
+    "noEmit": true,
     "strict": true,
-    "experimentalDecorators": true,
     "sourceMap": true
   }
 }

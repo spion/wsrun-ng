@@ -1,7 +1,6 @@
 import { ChildProcess, spawn } from 'child_process'
-import * as Bromise from 'bluebird'
 
-import originalSplit = require('split')
+import originalSplit from 'split'
 
 import { Result, ResultSpecialValues } from './enums'
 import { defer } from './utils'
@@ -50,7 +49,7 @@ export class CmdProcess {
   }
 
   get result() {
-    return Bromise.race([this._exitCode.promise, this._cancelled.promise])
+    return Promise.race([this._exitCode.promise, this._cancelled.promise])
   }
 
   /**
