@@ -1,7 +1,7 @@
 {
-  "name": "wsrun",
+  "name": "wsrun-ng",
   "version": "5.2.4",
-  "description": "executes commands on packages in parallel, but is aware of the dependencies between them",
+  "description": "A modernized fork of wsrun from the original maintainers. ",
   "main": "./build/index.js",
   "repository": "hfour/wsrun",
   "author": "hfour",
