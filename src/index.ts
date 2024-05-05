@@ -127,7 +127,7 @@ let yargsParser = yargs(process.argv)
         'Rewrite relative paths in the standard output, by prepending the <root_folder>/<package_name>.'
     },
     bin: {
-      default: 'yarn',
+      default: process.env['npm_execpath'] || 'yarn',
       describe: 'The program to pass the command to',
       type: 'string'
     },
@@ -189,7 +189,7 @@ const concurrency: number | null = typeof argv.concurrency === 'number' ? argv.c
 const cmd = argv._
 
 if (!cmd.length) {
-  yargs.showHelp()
+  yargsParser.showHelp()
   process.exit(1)
 }
 
