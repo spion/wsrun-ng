@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.3](https://github.com/spion/wsrun-ng/compare/v1.0.2...v1.0.3) (2024-05-05)
+
+
+### Bug Fixes
+
+* incorrect use of yargs causing crash ([cfc54c9](https://github.com/spion/wsrun-ng/commit/cfc54c9054794d027461e1c3f2e8e57bdd1c60e2))
+* terminal width support ([cfc54c9](https://github.com/spion/wsrun-ng/commit/cfc54c9054794d027461e1c3f2e8e57bdd1c60e2))
+* use npm_execpath to support bun ([#6](https://github.com/spion/wsrun-ng/issues/6)) ([cfc54c9](https://github.com/spion/wsrun-ng/commit/cfc54c9054794d027461e1c3f2e8e57bdd1c60e2))
+
 ## [1.0.2](https://github.com/spion/wsrun-ng/compare/v1.0.1...v1.0.2) (2024-05-04)
 
 
