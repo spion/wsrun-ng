@@ -10,9 +10,11 @@ import chalk from 'chalk'
 import { RunGraph } from './run-graph'
 import { Packages, listPkgs } from './workspace'
 
-let yargsParser = yargs(process.argv)
+let yargsInstance = yargs(process.argv)
+
+let yargsParser = yargsInstance
   .env('WSRUN')
-  // .wrap(yargs.terminalWidth() - 1)
+  .wrap(yargsInstance.terminalWidth() - 1)
   .updateStrings({
     'Options:': 'Other Options:'
   })
