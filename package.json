@@ -1,6 +1,6 @@
 {
   "name": "wsrun-ng",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A modernized fork of wsrun from the original maintainers. ",
   "main": "./build/index.js",
   "repository": "spion/wsrun",
