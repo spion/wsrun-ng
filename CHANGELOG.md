@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/spion/wsrun-ng/compare/v1.0.3...v1.0.4) (2024-05-06)
+
+
+### Bug Fixes
+
+* registry url for release-please workflow ([#8](https://github.com/spion/wsrun-ng/issues/8)) ([83f3d03](https://github.com/spion/wsrun-ng/commit/83f3d0312368a970f685dccce73bfae84ab090b4))
+
 ## [1.0.3](https://github.com/spion/wsrun-ng/compare/v1.0.2...v1.0.3) (2024-05-05)
 
 
