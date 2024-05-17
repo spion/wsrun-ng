@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/spion/wsrun-ng/compare/v1.0.4...v1.0.5) (2024-05-17)
+
+
+### Bug Fixes
+
+* repository entry in package.json ([#12](https://github.com/spion/wsrun-ng/issues/12)) ([42bb36d](https://github.com/spion/wsrun-ng/commit/42bb36d4be0d61b3b8b3d43ad710823f77f7c831))
+
 ## [1.0.4](https://github.com/spion/wsrun-ng/compare/v1.0.3...v1.0.4) (2024-05-06)
 
 
