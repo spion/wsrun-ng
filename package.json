@@ -3,7 +3,7 @@
   "version": "1.0.4",
   "description": "A modernized fork of wsrun from the original maintainers. ",
   "main": "./build/index.js",
-  "repository": "spion/wsrun",
+  "repository": "spion/wsrun-ng",
   "author": "hfour",
   "license": "MIT",
   "bin": {
